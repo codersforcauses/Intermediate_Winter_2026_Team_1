@@ -1,1 +1,10 @@
+# Virtual Environment
 venv/
+
+# Local database
+*.sqlite3
+
+# Environment files
+.env
+.env.*
+!.env.example
