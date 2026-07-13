@@ -1,33 +1,40 @@
 type AvatarProps = {
-    hat: boolean
-    outfit: boolean
-    acc: boolean
-    bg: boolean
+    hat?: string
+    outfit?: string
+    acc?: string
+    bg?: string
 }
 
-export default function Avatar({hat, outfit, acc, bg}: AvatarProps) {
+export default function Avatar({hat, outfit, acc }: AvatarProps) {
     return(
-        <div className="relative w-64 h-64 mx-auto">
-            <div className={`absolute inset-0 rounded-2xl ${bg ? "bg-purple-100" : "bg-gray-100"}`}/>
-            
-            <div className="absolute inset-0 flex items-center justify-center text-9xl">
-                cat
-            </div>
+        <div className="relative w-[500px] h-[500px]">
 
+            {/* cat base */}
+            <img
+                src="/images/1.png" alt="cat"
+                className="absolute inset-0 w-full h-full object-contain"
+            />
+
+            {/* layers */}
             {hat && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 text-4xl">
-                    tophat
-                </div>
+                <img
+                    src={hat} alt="hat"
+                    className="absolute inset-0 w-full h-full object-contain"
+                />
             )}
+
             {outfit && (
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-4xl">
-                    shirt
-                </div>
+                <img
+                    src={outfit} alt="outfit"
+                    className="absolute inset-0 w-full h-full object-contain"
+                />
             )}
+
             {acc && (
-                <div className="left-1/2 -translate-x-1/2 text-4xl">
-                    sparkle
-                </div>
+                <img
+                    src={acc} alt="accessory"
+                    className="absolute inset-0 w-full h-full object-contain"
+                />
             )}
         </div>
     )

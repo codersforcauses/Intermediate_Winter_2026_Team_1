@@ -2,17 +2,24 @@ type ShopItemProps = {
     name: string
     coinCost: number
     category: string
+    image: string
     owned: boolean
     onBuy: () => void // takes no args and returns nothing
 }
 
-export default function ShopItem({name, coinCost, category, owned, onBuy}: ShopItemProps) {
+export default function ShopItem({name, coinCost, category, image, owned, onBuy}: ShopItemProps) {
     return(
         <div className="border rounded-x1 p-4 flex flex-col gap-2">
-            <div className="text-4x1 text-center">hat</div>
+            
+            <img
+                src={image} alt={name}
+                className="w-12 h-12 object-contain rounded-lg"
+            />
+
             <h3 className="font-semibold text-center">{name}</h3>
             <p className="text-sm text-gray-500 text-center">{category}</p>
             <p className="text-center">{coinCost}</p>
+            
             <button
                 onClick={onBuy}
                 disabled={owned}
