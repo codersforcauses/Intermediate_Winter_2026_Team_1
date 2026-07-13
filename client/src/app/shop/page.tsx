@@ -4,8 +4,8 @@ import { useState } from "react"
 import ShopItem from "../../components/ShopItem"
 
 const PLACEHOLDERS = [
-    { id: 1, name: "Wizard Hat", coinCost: 50, category: "hat" },
-    { id: 2, name: "Pirate Outfit", coinCost: 120, category: "outfit" },
+    { id: 1, name: "Wizard Hat", coinCost: 50, category: "hat", image: "/images/wizardhat.png"},
+    { id: 2, name: "Mustard Sweater", coinCost: 120, category: "outfit", image: "/images/mustardsweater.png"},
 ]
 
 export default function ShopPage() {
@@ -22,7 +22,7 @@ export default function ShopPage() {
     return (
         <main className="p-6">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold">Pet Shop</h1>
+                <h1 className="text-2xl font-bold">Shop</h1>
                 <p className="text-amber-600 font-semibold">{coins} coins</p>
             </div>
 
@@ -33,6 +33,7 @@ export default function ShopPage() {
                         name={item.name}
                         coinCost={item.coinCost}
                         category={item.category}
+                        image={item.image}
                         owned={owned.includes(item.id)}
                         onBuy={() => buyItem(item.id, item.coinCost)}
                     />
