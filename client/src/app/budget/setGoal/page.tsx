@@ -130,6 +130,7 @@ export default function SetGoalPage() {
               )
             }
           >
+            <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
             <option value="monthly">Monthly</option>
           </select>
