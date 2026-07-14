@@ -1,4 +1,4 @@
-export type SavingFrequency = "daily" | "weekly" | "monthly";
+export type SavingFrequency = |"daily" | "weekly" | "monthly";
 
 export type SavingGoal = {
   purpose: string;
