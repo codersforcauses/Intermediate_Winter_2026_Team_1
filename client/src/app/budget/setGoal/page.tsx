@@ -6,19 +6,23 @@ import type {
   SavingGoal,
 } from "../../../types/savingGoal";
 
+type SavingGoalFormData = Omit<SavingGoal, "savedAmount">;
+
 export default function SetGoalPage() {
-  const [goal, setGoal] = useState<SavingGoal>({
+  const [goal, setGoal] = useState<SavingGoalFormData>({
     purpose: "",
     targetAmount: 0,
-    savedAmount: 0,
     targetDate: "",
     savingFrequency: "weekly",
     savingAmount: 0,
   });
 
-  function updateField<K extends keyof SavingGoal>(
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  function updateField<K extends keyof SavingGoalFormData>(
     field: K,
-    value: SavingGoal[K]
+    value: SavingGoalFormData[K]
   ) {
     setGoal((currentGoal) => ({
       ...currentGoal,
@@ -33,25 +37,39 @@ export default function SetGoalPage() {
       <form
         onSubmit={(event) => {
           event.preventDefault();
+          setErrorMessage("");
+          setSuccessMessage("");
 
           if (!goal.purpose.trim()) {
-            alert("Please enter a purpose for your goal.");
+            setErrorMessage("Please enter a purpose for your goal.");
             return;
           }
 
           if (goal.targetAmount <= 0) {
-            alert("Target amount must be greater than zero.");
+            setErrorMessage(
+              "Target amount must be greater than zero."
+            );
+            return;
+          }
+
+          if (!goal.targetDate) {
+            setErrorMessage("Please select a target date.");
             return;
           }
 
           if (goal.savingAmount <= 0) {
-            alert("Saving amount must be greater than zero.");
+            setErrorMessage(
+              "Saving amount must be greater than zero."
+            );
             return;
           }
 
           console.log("Goal submitted:", goal);
 
-          // Later, send this goal to the Django API.
+          // TODO: Submit to Django after account authentication is integrated.
+          setSuccessMessage(
+            "Goal details validated. Backend saving will be enabled after account integration."
+          );
         }}
       >
         <div>
@@ -86,23 +104,6 @@ export default function SetGoalPage() {
         </div>
 
         <div>
-          <label htmlFor="savedAmount">Already saved</label>
-          <input
-            id="savedAmount"
-            type="number"
-            min="0"
-            step="0.01"
-            value={goal.savedAmount}
-            onChange={(event) =>
-              updateField(
-                "savedAmount",
-                Number(event.target.value)
-              )
-            }
-          />
-        </div>
-
-        <div>
           <label htmlFor="targetDate">Target date</label>
           <input
             id="targetDate"
@@ -130,6 +131,7 @@ export default function SetGoalPage() {
               )
             }
           >
+            <option value="daily">Daily</option>
             <option value="weekly">Weekly</option>
             <option value="monthly">Monthly</option>
           </select>
@@ -155,6 +157,14 @@ export default function SetGoalPage() {
             required
           />
         </div>
+
+        {errorMessage && (
+          <p role="alert">{errorMessage}</p>
+        )}
+
+        {successMessage && (
+          <p role="status">{successMessage}</p>
+        )}
 
         <button type="submit">Save goal</button>
       </form>
