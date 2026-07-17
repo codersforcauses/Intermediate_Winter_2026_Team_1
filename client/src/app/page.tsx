@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Avatar from "../components/Avatar"
+//import Avatar from "../components/Avatar"
 
 const features = [
   {
@@ -35,7 +35,7 @@ export default function LandingPage() {
             <div className="mt-8 flex flex-wrap gap-4">
               <Link
                 href="/register"
-                className="rounded-full bg-berry px-6 py-3 font-body text-sm font-semibold text-paper transition-colors hover:bg-berry-deep"
+                className="rounded-full border border-berry bg-berry/10 px-6 py-3 font-body text-sm font-semibold text-berry transition-colors hover:bg-berry hover:text-paper"
               >
                 Create your Meow
               </Link>

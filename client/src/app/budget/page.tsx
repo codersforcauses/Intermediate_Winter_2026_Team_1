@@ -86,7 +86,8 @@ export default async function BudgetPage() {
       </header>
 
       {/* <GoalSummary goal={goal} /> */}
-      <GoalSummary goal={placeholderGoal} /> /* Using placeholder data until API integration is ready */
+      <GoalSummary goal={placeholderGoal} /> 
+      {/* Using placeholder data until API integration is ready */}
 
       <Link href="/budget/setGoal">Edit goal</Link>
     </main>
