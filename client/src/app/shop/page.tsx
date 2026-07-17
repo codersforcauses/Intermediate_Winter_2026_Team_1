@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { getStoreItems } from "../../lib/api"
 import ShopItem from "../../components/ShopItem"
 
-type storeItem = {
+type ShopItem = {
   id: number
   name: string
   coin_cost: number
@@ -13,10 +13,10 @@ type storeItem = {
   description: string
 }
 
-export default function storePage() {
+export default function StorePage() {
     const [coins, setCoins] = useState(300)
     const [owned, setOwned] = useState<number[]>([])
-    const [items, setItems] = useState<storeItem[]>([])
+    const [items, setItems] = useState<ShopItem[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
@@ -27,7 +27,7 @@ export default function storePage() {
             setItems(data)
             setLoading(false)
         })
-        .catch(err => {
+        .catch(_err => {
             setError("Could not load store items")
             setLoading(false)
         })
