@@ -1,9 +1,16 @@
 from django.db import models
-from django.contrib.auth.models import User
+#from django.contrib.auth.models import User
+from django.conf import settings
 
 # Create your models here.
 class Pet(models.Model):
-    owner = models.OneToOneField(User, on_delete=models.CASCADE)
+    #owner = models.OneToOneField(User, on_delete=models.CASCADE)
+    owner = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="cat",
+    )
+
     name = models.CharField(max_length=20, default="Meowny")
 
     equipped_hat = models.ForeignKey(
@@ -29,9 +36,10 @@ class StoreItem(models.Model):
     ]
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
-    coin_cost = models.IntegerField()
+    coin_cost = models.PositiveIntegerField()
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
-    img_url = models.URLField(blank=True)
+    #img_url = models.URLField(blank=True)
+    img_url = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
         return self.name
@@ -41,7 +49,7 @@ class PetCosmetic(models.Model):
     pet = models.ForeignKey(Pet, on_delete=models.CASCADE, related_name='cosmetics')
     item = models.ForeignKey(StoreItem, on_delete=models.CASCADE)
     purchased_at = models.DateTimeField(auto_now_add=True)
-    is_equipped = models.BooleanField(default=False)
+    #is_equipped = models.BooleanField(default=False)
 
     class Meta: # pet can own only one of item
         unique_together = ('pet', 'item')
