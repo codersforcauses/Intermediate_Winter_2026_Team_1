@@ -3,6 +3,7 @@ from decimal import Decimal
 from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator
+from django.db.models import Sum
 
 class SavingGoal(models.Model):
     class SavingFrequency(models.TextChoices):
@@ -28,6 +29,24 @@ class SavingGoal(models.Model):
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def saved_amount(self):
+        deposits = (
+            self.transactions.filter(
+                transaction_type="deposit",
+            ).aggregate(total=Sum("amount"))["total"]
+            or Decimal("0.00")
+        )
+
+        withdrawals = (
+            self.transactions.filter(
+                transaction_type="withdrawal",
+            ).aggregate(total=Sum("amount"))["total"]
+            or Decimal("0.00")
+        )
+
+        return deposits - withdrawals
 
     def __str__(self):
         return self.purpose

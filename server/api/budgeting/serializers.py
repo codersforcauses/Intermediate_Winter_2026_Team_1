@@ -2,6 +2,21 @@ from rest_framework import serializers
 from .models import DepositWithdrawal, SavingGoal
 from decimal import Decimal
 
+
+class DepositWithdrawalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DepositWithdrawal
+        fields = [
+            "id",
+            "amount",
+            "transaction_type",
+            "date",
+        ]
+        read_only_fields = [
+            "id",
+            "date",
+        ]
+
 class SavingGoalSerializer(serializers.ModelSerializer):
     saved_amount = serializers.SerializerMethodField()
 
