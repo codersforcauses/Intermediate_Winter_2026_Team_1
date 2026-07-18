@@ -4,6 +4,13 @@ import type {
   User,
 } from "../types/user";
 
+import type {
+  ApiSavingGoal,
+  ApiGoalTransaction,
+  SavingFrequency,
+  TransactionType,
+} from "../types/savingGoal";
+
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
@@ -151,4 +158,64 @@ export async function logoutUser(): Promise<void> {
 
 export function getCurrentUser(): Promise<User> {
   return apiRequest<User>("/api/accounts/me/");
+}
+
+export type SavingGoalPayload = {
+  purpose: string;
+  target_amount: number;
+  target_date: string;
+  saving_frequency: SavingFrequency;
+  saving_amount: number;
+};
+
+export function getSavingGoals(): Promise<ApiSavingGoal[]> {
+  return apiRequest<ApiSavingGoal[]>(
+    "/api/budgeting/goals/",
+  );
+}
+
+export function createSavingGoal(
+  data: SavingGoalPayload,
+): Promise<ApiSavingGoal> {
+  return apiRequest<ApiSavingGoal>(
+    "/api/budgeting/goals/",
+    {
+      method: "POST",
+      body: JSON.stringify(data),
+    },
+  );
+}
+
+export function updateSavingGoal(
+  goalId: number,
+  data: SavingGoalPayload,
+): Promise<ApiSavingGoal> {
+  return apiRequest<ApiSavingGoal>(
+    `/api/budgeting/goals/${goalId}/`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    },
+  );
+}
+
+export type GoalTransactionResponse = {
+  transaction: ApiGoalTransaction;
+  saved_amount: string;
+};
+
+export function createGoalTransaction(
+  goalId: number,
+  data: {
+    amount: number;
+    transaction_type: TransactionType;
+  },
+): Promise<GoalTransactionResponse> {
+  return apiRequest<GoalTransactionResponse>(
+    `/api/budgeting/goals/${goalId}/transactions/`,
+    {
+      method: "POST",
+      body: JSON.stringify(data),
+    },
+  );
 }

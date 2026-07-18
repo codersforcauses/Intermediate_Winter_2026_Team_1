@@ -8,15 +8,18 @@ import {
   ApiError,
   getApiErrorMessage,
   getCurrentUser,
+  getSavingGoals,
   logoutUser,
 } from "../../lib/api";
 import type { User } from "../../types/user";
 import Avatar from "../Avatar";
+import type { ApiSavingGoal } from "../../types/savingGoal";
 
 export default function AccountPanel() {
   const router = useRouter();
 
   const [user, setUser] = useState<User | null>(null);
+  const [savingGoal, setSavingGoal] = useState<ApiSavingGoal | null>(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -26,10 +29,14 @@ export default function AccountPanel() {
 
     async function loadUser() {
       try {
-        const currentUser = await getCurrentUser();
+        const [currentUser, goals] = await Promise.all([
+          getCurrentUser(),
+          getSavingGoals(),
+        ]);
 
         if (!cancelled) {
           setUser(currentUser);
+          setSavingGoal(goals[0] ?? null);
         }
       } catch (caughtError) {
         if (
@@ -186,10 +193,36 @@ export default function AccountPanel() {
               Your saving goal
             </p>
 
-            <p className="mt-2 font-body text-sm text-ink/60">
-              Goal information will appear here after the budgeting API
-              is connected.
-            </p>
+            {savingGoal ? (
+              <>
+                <p className="mt-2 font-display text-2xl text-ink">
+                  {savingGoal.purpose}
+                </p>
+
+                <p className="mt-2 font-body text-sm text-ink/60">
+                  ${Number(savingGoal.saved_amount).toFixed(2)} saved of{" "}
+                  ${Number(savingGoal.target_amount).toFixed(2)}
+                </p>
+
+                <div className="mt-4 h-2 overflow-hidden rounded-full bg-ink/10">
+                  <div
+                    className="h-full rounded-full bg-berry"
+                    style={{
+                      width: `${Math.min(
+                        (Number(savingGoal.saved_amount) /
+                          Number(savingGoal.target_amount)) *
+                          100,
+                        100,
+                      )}%`,
+                    }}
+                  />
+                </div>
+              </>
+            ) : (
+              <p className="mt-2 font-body text-sm text-ink/60">
+                You have not created a saving goal yet.
+              </p>
+            )}
           </div>
 
           <div className="mt-6 flex flex-wrap gap-3">
@@ -204,7 +237,7 @@ export default function AccountPanel() {
               href="/budget/setGoal"
               className="rounded-full border border-ink/20 px-5 py-2.5 font-body text-sm font-semibold text-ink transition-colors hover:border-ink/40 hover:bg-ink/5"
             >
-              Create or edit goal
+               {savingGoal ? "Edit goal" : "Create goal"}
             </Link>
           </div>
         </article>
