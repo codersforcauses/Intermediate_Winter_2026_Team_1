@@ -137,7 +137,7 @@ export default function AccountPanel() {
       <div className="mt-10 grid gap-6 lg:grid-cols-2">
         <article className="rounded-3xl border border-ink/15 p-8">
           <div className="grid gap-8 sm:grid-cols-[180px_1fr] sm:items-center">
-            <div className="flex aspect-square items-center justify-center rounded-full border border-ink/15 bg-ink/5 text-7xl">
+            <div className="flex aspect-square items-center justify-center rounded-full bg-ink/5 text-7xl">
               <Avatar />
             </div>
 
