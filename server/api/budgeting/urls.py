@@ -3,8 +3,11 @@ from django.urls import path
 from .views import (
     SavingGoalDetailView,
     SavingGoalListCreateView,
+    SavingGoalTransactionListCreateView,
 )
 
+
+app_name = "budgeting"
 
 urlpatterns = [
     path(
@@ -16,5 +19,10 @@ urlpatterns = [
         "goals/<int:pk>/",
         SavingGoalDetailView.as_view(),
         name="saving-goal-detail",
+    ),
+    path(
+        "goals/<int:goal_id>/transactions/",
+        SavingGoalTransactionListCreateView.as_view(),
+        name="saving-goal-transactions",
     ),
 ]

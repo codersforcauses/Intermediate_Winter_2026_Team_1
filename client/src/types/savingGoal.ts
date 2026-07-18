@@ -1,4 +1,16 @@
-export type SavingFrequency = |"daily" | "weekly" | "monthly";
+export type SavingFrequency =
+  | "daily"
+  | "weekly"
+  | "monthly";
+
+export type SavingGoalStatus =
+  | "active"
+  | "completed"
+  | "paused";
+
+export type TransactionType =
+  | "deposit"
+  | "withdrawal";
 
 export type SavingGoal = {
   purpose: string;
@@ -9,19 +21,30 @@ export type SavingGoal = {
   savingAmount: number;
 };
 
+export type ApiGoalTransaction = {
+  id: number;
+  amount: string;
+  transaction_type: TransactionType;
+  date: string;
+};
+
 export type ApiSavingGoal = {
   id: number;
+  user: number;
   purpose: string;
+  description: string;
   target_amount: string;
   saved_amount: string;
   target_date: string;
   saving_frequency: SavingFrequency;
   saving_amount: string;
-  status: "active" | "completed" | "paused";
+  status: SavingGoalStatus;
+  created_at: string;
+  updated_at: string;
 };
 
 export function mapApiSavingGoal(
-  apiGoal: ApiSavingGoal
+  apiGoal: ApiSavingGoal,
 ): SavingGoal {
   return {
     purpose: apiGoal.purpose,

@@ -1,72 +1,151 @@
-from rest_framework import status
-from rest_framework.decorators import api_view
+from django.shortcuts import get_object_or_404
+from rest_framework import generics, status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .models import StoreItem, Pet, PetCosmetic
-from .serializers import StoreItemSerializer, PetSerializer, PetCosmeticSerializer
+from rest_framework.views import APIView
 
-# GET
-# /api/gamification/store/ - returns all items in shop
-@api_view(['GET'])
-def store_items(request):
-    items = StoreItem.objects.all()
-    serializer = StoreItemSerializer(items, many=True)
-    return Response(serializer.data)
+from .models import Pet, PetCosmetic, StoreItem
+from .serializers import (
+    PetCosmeticSerializer,
+    PetSerializer,
+    PetUpdateSerializer,
+    StoreItemSerializer,
+)
 
-# /api/gamification/store/<category>/ - returns filtered items by category
-@api_view(['GET'])
-def store_items_by_category(request, category):
-    items = StoreItem.objects.filter(category=category)
-    serializer = StoreItemSerializer(items, many=True)
-    return Response(serializer.data)
 
-# /api/gamification/pet/ - returns user's pet + wardrobe items (cosmetics)
-@api_view(['GET'])
-def my_pet(request):
-    try:
-        pet = Pet.objects.get(owner=request.user)
-    except Pet.DoesNotExist:
-        return Response({'error': 'No pet found'}, status=status.HTTP_404_NOT_FOUND)
-    serializer = PetSerializer(pet)
-    return Response(serializer.data)
+def get_user_pet(user):
+    pet, _ = Pet.objects.get_or_create(owner=user)
+    return pet
 
-# POST
-# /api/gamification/store/<id>/buy/ - purchase item and add to pet cosmetic/wardrobe
-@api_view(['POST'])
-def buy_item(request, item_id):
-    try:
-        pet = Pet.objects.get(owner=request.user)
-        item = StoreItem.objects.get(id=item_id)
-    except (Pet.DoesNotExist, StoreItem.DoesNotExist):
-        return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    # check already owned
-    if PetCosmetic.objects.filter(pet=pet, item=item).exists():
-        return Response({'error': 'Already owned'}, status=status.HTTP_400_BAD_REQUEST)
+class PetDetailView(APIView):
+    permission_classes = [IsAuthenticated]
 
-    PetCosmetic.objects.create(pet=pet, item=item)
-    return Response({'message': f'{item.name} purchased!'}, status=status.HTTP_201_CREATED)
+    def get(self, request):
+        pet = get_user_pet(request.user)
 
-# /api/gamification/pet/equip/<id>/ - toggle equip/unequip for an owned item
-@api_view(['POST'])
-def equip_item(request, item_id):
-    try:
-        pet = Pet.objects.get(owner=request.user)
-        cosmetic = PetCosmetic.objects.get(pet=pet, item_id=item_id)
-    except (Pet.DoesNotExist, PetCosmetic.DoesNotExist):
-        return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            PetSerializer(pet).data,
+            status=status.HTTP_200_OK,
+        )
 
-    # toggle is_equipped
-    cosmetic.is_equipped = not cosmetic.is_equipped
-    cosmetic.save()
+    def patch(self, request):
+        pet = get_user_pet(request.user)
 
-    # update the slot on Pet model
-    item = cosmetic.item
-    if item.category == 'hat':
-        pet.equipped_hat = cosmetic.item if cosmetic.is_equipped else None
-    elif item.category == 'outfit':
-        pet.equipped_outfit = cosmetic.item if cosmetic.is_equipped else None
-    elif item.category == 'acc':
-        pet.equipped_acc = cosmetic.item if cosmetic.is_equipped else None
-    pet.save()
+        serializer = PetUpdateSerializer(
+            pet,
+            data=request.data,
+            partial=True,
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
 
-    return Response({'equipped': cosmetic.is_equipped})
+        return Response(
+            PetSerializer(pet).data,
+            status=status.HTTP_200_OK,
+        )
+
+
+class StoreItemListView(generics.ListAPIView):
+    serializer_class = StoreItemSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return StoreItem.objects.all().order_by(
+            "category",
+            "name",
+        )
+
+
+class OwnedItemListView(generics.ListAPIView):
+    serializer_class = PetCosmeticSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        pet = get_user_pet(self.request.user)
+
+        return PetCosmetic.objects.filter(
+            pet=pet,
+        ).select_related("item")
+
+
+class EquipItemView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, item_id):
+        pet = get_user_pet(request.user)
+
+        owned_item = get_object_or_404(
+            PetCosmetic.objects.select_related("item"),
+            pet=pet,
+            item_id=item_id,
+        )
+
+        item = owned_item.item
+
+        if item.category == "hat":
+            pet.equipped_hat = item
+            field_name = "equipped_hat"
+
+        elif item.category == "outfit":
+            pet.equipped_outfit = item
+            field_name = "equipped_outfit"
+
+        elif item.category == "acc":
+            pet.equipped_acc = item
+            field_name = "equipped_acc"
+
+        else:
+            return Response(
+                {"detail": "Invalid item category."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        pet.save(update_fields=[field_name])
+
+        return Response(
+            {
+                "detail": f"{item.name} equipped.",
+                "pet": PetSerializer(pet).data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class UnequipItemView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, category):
+        pet = get_user_pet(request.user)
+
+        if category == "hat":
+            pet.equipped_hat = None
+            field_name = "equipped_hat"
+
+        elif category == "outfit":
+            pet.equipped_outfit = None
+            field_name = "equipped_outfit"
+
+        elif category == "acc":
+            pet.equipped_acc = None
+            field_name = "equipped_acc"
+
+        else:
+            return Response(
+                {
+                    "detail": (
+                        "Category must be hat, outfit, or acc."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        pet.save(update_fields=[field_name])
+
+        return Response(
+            {
+                "detail": f"{category} unequipped.",
+                "pet": PetSerializer(pet).data,
+            },
+            status=status.HTTP_200_OK,
+        )

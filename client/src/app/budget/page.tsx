@@ -1,95 +1,161 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
 import GoalSummary from "../../components/GoalSummary";
+import {
+  ApiError,
+  getApiErrorMessage,
+  getSavingGoals,
+} from "../../lib/api";
 import {
   mapApiSavingGoal,
   type ApiSavingGoal,
-  type SavingGoal,
 } from "../../types/savingGoal";
 
-// Temporary data until account authentication and API integration are ready.
-const placeholderGoal: SavingGoal = {
-  purpose: "Buy a new laptop",
-  targetAmount: 2000,
-  savedAmount: 650,
-  targetDate: "2026-12-01",
-  savingFrequency: "monthly",
-  savingAmount: 225,
-};
+import TransactionForm from "../../components/budget/TransactionForm";
 
-export default async function BudgetPage() {
-  // Will be uncommented when the API is ready to be integrated. For now, using placeholder data.
-  // const apiBaseUrl = process.env.API_BASE_URL;
+export default function BudgetPage() {
+  const router = useRouter();
 
-  // if (!apiBaseUrl) {
-  //   return (
-  //     <main>
-  //       <h1>My Saving Goal</h1>
-  //       <p>The backend URL has not been configured.</p>
-  //     </main>
-  //   );
-  // }
+  const [apiGoal, setApiGoal] =
+    useState<ApiSavingGoal | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // let response: Response;
+  useEffect(() => {
+    let cancelled = false;
 
-  // try {
-  //   response = await fetch(
-  //     `${apiBaseUrl}/api/budgeting/goals/`,
-  //     {
-  //       cache: "no-store",
-  //     }
-  //   );
-  // } catch (error) {
-  //   console.error("Unable to connect to Django:", error);
+    async function loadGoal() {
+      try {
+        const goals = await getSavingGoals();
 
-  //   return (
-  //     <main>
-  //       <h1>My Saving Goal</h1>
-  //       <p>
-  //         Unable to connect to the budgeting server. Make sure
-  //         Django is running.
-  //       </p>
-  //     </main>
-  //   );
-  // }
+        if (!cancelled) {
+          setApiGoal(goals[0] ?? null);
+        }
+      } catch (caughtError) {
+        if (
+          caughtError instanceof ApiError &&
+          (caughtError.status === 401 ||
+            caughtError.status === 403)
+        ) {
+          router.replace("/login");
+          return;
+        }
 
-  // if (!response.ok) {
-  //   return (
-  //     <main>
-  //       <h1>My Saving Goal</h1>
-  //       <p>Unable to load your saving goal.</p>
-  //     </main>
-  //   );
-  // }
+        if (!cancelled) {
+          setError(getApiErrorMessage(caughtError));
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
 
-  // const apiGoals: ApiSavingGoal[] = await response.json();
+    loadGoal();
 
-  // if (apiGoals.length === 0) {
-  //   return (
-  //     <main>
-  //       <h1>My Saving Goal</h1>
-  //       <p>You have not created a saving goal yet.</p>
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
-  //       <Link href="/budget/setGoal">
-  //         Create a goal
-  //       </Link>
-  //     </main>
-  //   );
-  // }
-
-  // const goal = mapApiSavingGoal(apiGoals[0]);
+  if (isLoading) {
+    return (
+      <section className="mx-auto max-w-6xl">
+        <p className="font-body text-ink/65">
+          Loading your saving goal...
+        </p>
+      </section>
+    );
+  }
 
   return (
-    <main>
-      <header>
-        <h1>My Saving Goal</h1>
-        <p>Track your progress toward your goal.</p>
+    <section className="mx-auto max-w-6xl">
+      <header className="flex flex-wrap items-start justify-between gap-6">
+        <div>
+          <p className="font-mono text-xs uppercase tracking-[0.2em] text-berry">
+            Budgeting
+          </p>
+
+          <h1 className="mt-3 font-display text-4xl text-ink md:text-5xl">
+            My Saving Goal
+          </h1>
+
+          <p className="mt-3 font-body text-ink/65">
+            Track your progress and keep your saving plan on target.
+          </p>
+        </div>
+
+        {apiGoal && (
+          <Link
+            href="/budget/setGoal"
+            className="rounded-full border border-berry bg-berry px-6 py-3 font-body text-sm font-semibold text-paper transition-colors hover:bg-berry-deep"
+          >
+            Edit goal
+          </Link>
+        )}
       </header>
 
-      {/* <GoalSummary goal={goal} /> */}
-      <GoalSummary goal={placeholderGoal} /> 
-      {/* Using placeholder data until API integration is ready */}
+      {error && (
+        <p
+          role="alert"
+          className="mt-8 rounded-2xl border border-berry/30 bg-berry/10 p-4 font-body text-sm text-berry"
+        >
+          {error}
+        </p>
+      )}
 
-      <Link href="/budget/setGoal">Edit goal</Link>
-    </main>
+      {!error && !apiGoal && (
+        <article className="mt-10 rounded-3xl border border-ink/15 p-8">
+          <p className="font-mono text-xs uppercase tracking-[0.2em] text-berry">
+            Start saving
+          </p>
+
+          <h2 className="mt-3 font-display text-3xl text-ink">
+            You do not have a saving goal yet
+          </h2>
+
+          <p className="mt-3 max-w-xl font-body text-sm leading-relaxed text-ink/65">
+            Create a goal, choose a target date and decide how
+            much you would like to save each period.
+          </p>
+
+          <Link
+            href="/budget/setGoal"
+            className="mt-7 inline-flex rounded-full border border-berry bg-berry px-6 py-3 font-body text-sm font-semibold text-paper transition-colors hover:bg-berry-deep"
+          >
+            Create a goal
+          </Link>
+        </article>
+      )}
+
+      {apiGoal && (
+        <div className="mt-10 grid gap-6 lg:grid-cols-2">
+          <article className="rounded-3xl border border-ink/15 p-8">
+            <GoalSummary goal={mapApiSavingGoal(apiGoal)} />
+          </article>
+
+          <TransactionForm
+            goalId={apiGoal.id}
+            savedAmount={Number(apiGoal.saved_amount)}
+            onBalanceChange={(newBalance) => {
+              setApiGoal((currentGoal) => {
+                if (!currentGoal) {
+                  return null;
+                }
+
+                return {
+                  ...currentGoal,
+                  saved_amount: String(newBalance),
+                };
+              });
+            }}
+          />
+        </div>
+      )}
+    </section>
   );
 }
