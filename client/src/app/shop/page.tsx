@@ -1,37 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { getStoreItems } from "../../lib/api"
+import { useState } from "react"
 import ShopItem from "../../components/ShopItem"
 
-type ShopItem = {
-  id: number
-  name: string
-  coin_cost: number
-  category: string
-  img_url: string
-  description: string
-}
+const PLACEHOLDERS = [
+    { id: 1, name: "Wizard Hat", coinCost: 50, category: "hat", image: "/images/wizardhat.png"},
+    { id: 2, name: "Mustard Sweater", coinCost: 120, category: "outfit", image: "/images/mustardsweater.png"},
+]
 
-export default function StorePage() {
+export default function ShopPage() {
     const [coins, setCoins] = useState(300)
     const [owned, setOwned] = useState<number[]>([])
-    const [items, setItems] = useState<ShopItem[]>([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
-
-    // fetch items from Django when page loads
-    useEffect(() => {
-        getStoreItems()
-        .then(data => {
-            setItems(data)
-            setLoading(false)
-        })
-        .catch(_err => {
-            setError("Could not load store items")
-            setLoading(false)
-        })
-    }, [])
 
     function buyItem(id: number, cost: number) {
         if (coins >= cost && !owned.includes(id)) {
@@ -39,9 +18,6 @@ export default function StorePage() {
             setOwned([...owned, id])
         }
     }
-
-    if (loading) return <p className="p-6">Loading store...</p>
-    if (error) return <p className="p-6 text-red-500">{error}</p>
 
     return (
         <main className="p-6">
@@ -51,15 +27,15 @@ export default function StorePage() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                {items.map((item) => (
+                {PLACEHOLDERS.map((item) => (
                     <ShopItem
                         key={item.id}
                         name={item.name}
-                        coinCost={item.coin_cost}
+                        coinCost={item.coinCost}
                         category={item.category}
-                        image={item.img_url}
+                        image={item.image}
                         owned={owned.includes(item.id)}
-                        onBuy={() => buyItem(item.id, item.coin_cost)}
+                        onBuy={() => buyItem(item.id, item.coinCost)}
                     />
                 ))}
             </div>

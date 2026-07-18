@@ -1,17 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Avatar from "../../components/Avatar"
 import OwnedItem from "../../components/OwnedItem"
-import { getOwnedItems } from "../../lib/api"
 
 
-type StoreItem = {
-  id: number
-  name: string
-  category: string
-  img_url: string
-}
+const OWNED_ITEMS = [
+  { id: 1, name: "Wizard Hat", category: "hat", image: "/images/wizardhat.png" },
+  { id: 2, name: "Mustard Sweater", category: "outfit", image: "/images/mustardsweater.png"},
+  { id: 3, name: "Monocole", category: "accessory", image: "/images/monocle.png" },
+  { id: 4, name: "Bow Tie", category: "accessory", image: "/images/bowtie.png" },
+]
 
 type EquippedState = {
   hat: number | null
@@ -21,8 +20,6 @@ type EquippedState = {
 }
 
 export default function MyMeowPage() {
-  const [ownedItems, setOwnedItems] = useState<StoreItem[]>([])
-  const [loading, setLoading] = useState(true)
   const [equipped, setEquipped] = useState<Record<string, number | null>>({
     hat: null,
     outfit: null,
@@ -30,27 +27,16 @@ export default function MyMeowPage() {
     background: null,
   })
 
-  useEffect(() => {
-    getOwnedItems()
-      .then(data => {
-        setOwnedItems(data)
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
-  }, [])
+  function getImage(category: string) {
+    const equippedId = equipped[category as keyof EquippedState]
+    return OWNED_ITEMS.find(item => item.id === equippedId)?.image
+  }
 
   function toggleEquip(id: number, category: string) {
     setEquipped(prev => ({
         ...prev,
         [category]: prev[category] === id ? null : id
     }))
-  }
-
-  if (loading) return <p className="p-6">Loading...</p>
-
-  function getImage(category: string) {
-    const equippedId = equipped[category as keyof EquippedState]
-    return ownedItems.find(item => item.id === equippedId)?.img_url
   }
 
   return (
@@ -81,12 +67,12 @@ export default function MyMeowPage() {
 
         <h2 className="text-lg font-bold">Wardrobe</h2>
 
-        {ownedItems.map((item) => (
+        {OWNED_ITEMS.map((item) => (
           <OwnedItem
             key={item.id}
             name={item.name}
             category={item.category}
-            image={item.img_url}
+            image={item.image}
             equipped={equipped[item.category] === item.id}
             onToggle={() => toggleEquip(item.id, item.category)}
           />
